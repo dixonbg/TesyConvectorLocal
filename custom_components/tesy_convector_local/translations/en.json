@@ -138,6 +138,12 @@
     "sensor": {
       "internal_temperature": {
         "name": "Internal temperature"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "energy": {
+        "name": "Energy"
       }
     }
   }

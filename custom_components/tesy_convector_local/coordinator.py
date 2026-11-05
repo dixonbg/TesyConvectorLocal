@@ -50,6 +50,15 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             configuration_url=f"http://{self.host}/",
         )
 
+    def set_cloud_details(self, cloud: Any) -> None:
+        """Model and firmware are only known from the MyTESY cloud."""
+        if cloud.model_type:
+            self.device_info["model"] = cloud.model_type.removeprefix("Convector ").strip()
+        if cloud.model:
+            self.device_info["model_id"] = cloud.model
+        if cloud.firmware:
+            self.device_info["sw_version"] = cloud.firmware
+
     def set_mac(self, mac: str | None) -> None:
         """Link the device to its MAC (also lets HA merge it with other integrations' view)."""
         if mac:

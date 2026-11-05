@@ -39,6 +39,7 @@ ORIGIN = "https://v4.mytesy.com"
 LANG = "en"
 ALLOWED_BROKER_SUFFIX = ".tesy.com"
 TELEMETRY = "setTempStatistic"
+HOURLY = "setStatistic"  # once an hour: seconds the element heated in that hour
 
 
 class TesyCloudAuthError(Exception):
@@ -131,6 +132,12 @@ class TesyDeviceTelemetry:
         device = hub.account.devices.get(key, {})
         self.model = str(device.get("model") or "").lower()
         self.token = str(device.get("token") or "")
+        state = device.get("state") if isinstance(device.get("state"), dict) else {}
+        # what the owner entered in the MyTESY app; read at login, so a change needs a reload
+        self.watt: int | None = _int(state.get("watt"))
+        self.model_type: str | None = device.get("model_type") or None  # e.g. "Convector CN06AS"
+        self.firmware: str | None = device.get("firmware_version") or None
+        self.last_hour: dict[str, Any] | None = None  # {"from", "to", "seconds"}
         self.heating: bool | None = None
         self.current_temp: float | None = None
         self.last_telemetry: float | None = None
@@ -158,7 +165,12 @@ class TesyDeviceTelemetry:
     def handle(self, command: str, retained: bool, data: Any) -> None:
         """Runs in paho's thread; the hub schedules notify() on the event loop."""
         self.messages[command] = {"at": time.time(), "retained": retained, "data": data}
-        if command != TELEMETRY or retained or not isinstance(data, dict):
+        if retained or not isinstance(data, dict):
+            return
+        if command == HOURLY:
+            self._handle_hourly(data)
+            return
+        if command != TELEMETRY:
             return
         payload = data.get("payload") if isinstance(data.get("payload"), dict) else data
         if payload.get("heating") in ("on", "off"):
@@ -170,6 +182,21 @@ class TesyDeviceTelemetry:
             return
         if math.isfinite(temp) and -40 <= temp <= 80:
             self.current_temp = temp
+
+
+    def _handle_hourly(self, data: dict) -> None:
+        payload = data.get("payload") if isinstance(data.get("payload"), dict) else data
+        if (seconds := _int(payload.get("time"))) is not None and 0 <= seconds <= 3600:
+            self.last_hour = {"from": payload.get("from"), "to": payload.get("to"), "seconds": seconds}
+        if payload.get("ver"):
+            self.firmware = str(payload["ver"])
+
+
+def _int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class TesyCloudHub:

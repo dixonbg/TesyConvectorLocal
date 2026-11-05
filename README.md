@@ -28,7 +28,22 @@ The integration then reads, without ever sending commands to the cloud:
 | Entity | Source |
 |---|---|
 | Heating (binary sensor) | `heating` in the convector's `setTempStatistic` MQTT messages |
-| Internal temperature | `currentTemp` in the same messages (the convector's own sensor) |
+| Internal temperature | `currentTemp` in the same messages (the convector's own sensor, 0.5 °C steps) |
+| Power | the wattage entered in the MyTESY app while heating, else 0 W |
+| Energy (kWh, for the Energy dashboard) | power added up over time |
+| Device model and firmware | `get-my-devices` (`model_type`, `firmware_version`), shown on the device page |
+
+**All of these exist only with a working cloud login.** Without it (no login, wrong password,
+MyTESY down) the integration is local-only: no heating state, internal temperature, power,
+energy, model or firmware; the device page shows the generic model "CN06AS". While the cloud
+connection is down the cloud entities are unavailable and the energy counter pauses.
+
+Power and energy are **estimates**, the same way the Tesy app calculates them: the convector
+measures nothing, it only reports when the element heats; the wattage is what the owner set in the
+app (read at login; reload the integration after changing it). Heating time while HA is stopped or
+the cloud is disconnected is not counted. The energy sensor shows Tesy's own hourly figure
+(`tesy_last_hour_heating_s`, `tesy_last_hour_kwh`) for comparison. For measured energy use a
+metering smart plug.
 
 The climate entity uses them too: its **action** shows *heating* / *idle*, and the convector's own
 temperature (0.5 °C steps) is the `internal_temperature` attribute. Without a room sensor it is also
@@ -75,7 +90,15 @@ existing entry and `climate.*` entity are kept; the MAC is learned on first star
 
 ## Supported devices
 
-Tested on a **Tesy CN06AS** (CN06AS-D060). Other convectors that answer
+Tested on a **Tesy FinEco Cloud CN 06 200 EA CLOUD AS W** (2000 W, firmware 4.79; MyTESY model
+code `cn05uv`, "Convector CN06AS").
+
+Likely to work (same app and model family, not tested yet; reports welcome, ideally with diagnostics):
+other **FinEco Cloud CN 06** sizes and the Glass version, **LivEco Cloud CN 051** and
+**HeatEco Cloud CN 031**. Tesy water heaters use a different API, see
+[krasnoukhov/homeassistant-tesy](https://github.com/krasnoukhov/homeassistant-tesy).
+
+Other convectors that answer
 `POST http://<ip>/getStatus` with `{"payload": {"onOff": …, "setMode": …, "setTemp": …}}`
 should work. Older Tesy units with the `GET /status` API (Atheros module) are not supported;
 setup reports them as "not a supported Tesy convector".

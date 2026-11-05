@@ -138,6 +138,12 @@
     "sensor": {
       "internal_temperature": {
         "name": "Вътрешна температура"
+      },
+      "power": {
+        "name": "Мощност"
+      },
+      "energy": {
+        "name": "Енергия"
       }
     }
   }
