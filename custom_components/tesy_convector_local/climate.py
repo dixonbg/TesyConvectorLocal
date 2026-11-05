@@ -1,113 +1,149 @@
-import asyncio
+"""Climate entity: on/off, target temperature and the device modes as presets.
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import HVACMode
-from homeassistant.const import UnitOfTemperature
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.helpers.event import async_track_time_interval
-from datetime import timedelta
+Device modes (setMode "name", tested on a CN06AS): heating (normal, uses setTemp),
+comfort / eco / sleep (use setComfortTemp / setEcoTemp / setSleepTemp) and program
+(weekly schedule set in the Tesy app). Unknown names are answered "OK" but ignored.
+"""
+from __future__ import annotations
 
-from .tesy_convector import TesyConvector
+from typing import Any
 
-import logging
+from homeassistant.components.climate import (
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_NONE,
+    PRESET_SLEEP,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import TesyConfigEntry, TesyCoordinator
+
+PRESET_PROGRAM = "program"
+PRESET_TO_MODE = {
+    PRESET_NONE: "heating",
+    PRESET_COMFORT: "comfort",
+    PRESET_ECO: "eco",
+    PRESET_SLEEP: "sleep",
+    PRESET_PROGRAM: "program",
+}
+MODE_TO_PRESET = {mode: preset for preset, mode in PRESET_TO_MODE.items()}
+MODE_TEMP_COMMAND = {
+    "heating": "setTemp",
+    "comfort": "setComfortTemp",
+    "eco": "setEcoTemp",
+    "sleep": "setSleepTemp",
+}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Tesy Convector climate entity."""
-    ip_address = config_entry.data.get("ip_address")
-    temperature_entity = config_entry.data.get("temperature_entity")  # Get temperature entity if provided
-    convector = TesyConvector(ip_address)
-    async_add_entities([TesyConvectorClimate(convector, temperature_entity)])
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TesyConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    async_add_entities([TesyClimate(entry.runtime_data)])
 
 
-class TesyConvectorClimate(ClimateEntity):
-    """Representation of a Tesy Convector as a ClimateEntity."""
+class TesyClimate(CoordinatorEntity[TesyCoordinator], ClimateEntity):
+    """The convector."""
 
-    def __init__(self, convector, temperature_entity=None):
-        """Initialize the climate entity."""
-        self._remove_update_listener = None
-        self.convector = convector
-        self.temperature_entity = temperature_entity
-        self._attr_name = "Tesy Convector"
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS  # Updated to use UnitOfTemperature.CELSIUS
-        # Explicitly declare both TARGET_TEMPERATURE
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-        self._attr_min_temp = 10
-        self._attr_max_temp = 30
-        self._attr_target_temperature_step = 1
-        self._hvac_mode = HVACMode.OFF  # Default to off initially
-        self._current_temp = None  # Variable to store current temperature
-        self._target_temp = None  # Variable to store target temperature
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "convector"
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = list(PRESET_TO_MODE)
+    _attr_min_temp = 10
+    _attr_max_temp = 30
+    _attr_target_temperature_step = 1
 
-    async def async_update(self, *args):
-        """Fetch new state data for this entity."""
-        if self.temperature_entity:
-            # Get the temperature from the specified entity
-            temp_state = self.hass.states.get(self.temperature_entity)
-            if temp_state:
-                self._current_temp = float(temp_state.state)
+    def __init__(self, coordinator: TesyCoordinator) -> None:
+        super().__init__(coordinator)
+        # entry id as unique id: stays stable when the convector gets a new IP
+        self._attr_unique_id = coordinator.config_entry.entry_id
+        self._attr_device_info = coordinator.device_info
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self.coordinator.temperature_entity:
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self.coordinator.temperature_entity], self._room_temp_changed
+                )
+            )
+
+    @callback
+    def _room_temp_changed(self, _event: Event) -> None:
+        self.async_write_ha_state()
+
+    @property
+    def _mode(self) -> str | None:
+        return self.coordinator.value("setMode", "name")
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        return HVACMode.HEAT if self.coordinator.value("onOff", "status") == "on" else HVACMode.OFF
+
+    @property
+    def preset_mode(self) -> str | None:
+        return MODE_TO_PRESET.get(self._mode)
+
+    @property
+    def native_target_temperature(self) -> float | None:
+        command = MODE_TEMP_COMMAND.get(self._mode)
+        return self.coordinator.value(command, "temp") if command else None
+
+    @property
+    def native_current_temperature(self) -> float | None:
+        if not (entity_id := self.coordinator.temperature_entity):
+            return None
+        state = self.hass.states.get(entity_id)
+        try:
+            return float(state.state)
+        except (AttributeError, TypeError, ValueError):
+            return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"device_mode": self._mode}
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        status = "on" if hvac_mode == HVACMode.HEAT else "off"
+        await self.coordinator.async_command("onOff", {"status": status})
+
+    async def async_turn_on(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.HEAT)
+
+    async def async_turn_off(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        await self.coordinator.async_command("setMode", {"name": PRESET_TO_MODE[preset_mode]})
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        temp = int(round(temp))
+        mode = self._mode
+        if mode == "comfort":
+            await self.coordinator.async_command("setComfortTemp", {"temp": temp})
+        elif mode in ("eco", "sleep"):
+            command = MODE_TEMP_COMMAND[mode]
+            await self.coordinator.async_command(
+                command, {"temp": temp, "time": self.coordinator.value(command, "time")}
+            )
         else:
-            # Fallback to using the convector's temperature
-            status = await self.convector.get_status()
-            self._current_temp = status['payload']['setTemp']['payload']['temp']
-
-        """Fetch new state data for this entity."""
-        status = await self.convector.get_status()
-
-        # Log the full response for debugging
-        _LOGGER.debug("Tesy Convector status: %s", status)
-
-        # Check if 'payload' exists before accessing it
-        if 'payload' in status and 'onOff' in status['payload'] and 'status' in status['payload']['onOff']['payload']:
-            self._hvac_mode = HVACMode.HEAT if status['payload']['onOff']['payload']['status'] == 'on' else HVACMode.OFF
-            self._target_temp = status['payload']['setTemp']['payload']['temp']  # Set target temperature
-        else:
-            _LOGGER.error("Unexpected response structure from Tesy Convector: %s", status)
-            # Optionally set default values in case of an unexpected structure
-            self._hvac_mode = HVACMode.OFF
-            self._target_temp = None
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC mode."""
-        return self._hvac_mode
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temp
-
-    @property
-    def target_temperature(self):
-        """Return the current target temperature."""
-        return self._target_temp
-
-    async def async_added_to_hass(self):
-        """Run when entity is added to Home Assistant."""
-        # Update the state every 20 seconds
-        self._remove_update_listener = async_track_time_interval(
-            self.hass, self.async_update, timedelta(seconds=10)
-        )
-
-    async def async_set_hvac_mode(self, hvac_mode):
-        """Set the HVAC mode (on/off)."""
-        if hvac_mode == HVACMode.HEAT:
-            await self.convector.turn_on()
-        elif hvac_mode == HVACMode.OFF:
-            await self.convector.turn_off()
-
-        # Add a delay after setting the HVAC mode to give the convector time to process
-        await asyncio.sleep(0.1)
-
-    async def async_set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        temp = kwargs.get("temperature")
-        if temp is not None and self._target_temp != temp:
-            await self.convector.set_temperature(temp)
-            self._target_temp = temp  # Update the internal target temperature
-            await asyncio.sleep(0.1)
+            # in program mode a manual setpoint switches back to normal heating
+            if mode != "heating":
+                await self.coordinator.async_command("setMode", {"name": "heating"})
+            await self.coordinator.async_command("setTemp", {"temp": temp})

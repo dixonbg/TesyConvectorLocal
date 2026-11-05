@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Конвектор Tesy",
+        "description": "Локално управление през вградения уеб API на конвектора. Дайте му фиксиран IP (резервация в DHCP).",
+        "data": {
+          "ip_address": "IP адрес",
+          "temperature_entity": "Сензор за стайна температура (по избор)"
+        },
+        "data_description": {
+          "temperature_entity": "Конвекторът не отчита стайната температура през локалния API. Изберете сензор в същата стая."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Конвекторът не отговаря на този адрес.",
+      "unsupported": "Устройството отговаря, но не като поддържан конвектор Tesy (по-старите модели ползват друг API)."
+    },
+    "abort": {
+      "already_configured": "Този конвектор вече е добавен."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Конвектор Tesy",
+        "data": {
+          "ip_address": "IP адрес",
+          "temperature_entity": "Сензор за стайна температура (по избор)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Конвекторът не отговаря на този адрес.",
+      "unsupported": "Устройството отговаря, но не като поддържан конвектор Tesy."
+    }
+  },
+  "entity": {
+    "climate": {
+      "convector": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "Отопление",
+              "comfort": "Комфорт",
+              "eco": "Еко",
+              "sleep": "Сън",
+              "program": "Програма"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "adaptive_start": {
+        "name": "Адаптивен старт"
+      },
+      "open_window_detection": {
+        "name": "Отворен прозорец"
+      },
+      "anti_frost": {
+        "name": "Против замръзване"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "child_lock": {
+        "name": "Заключване за деца"
+      },
+      "delayed_start": {
+        "name": "Отложен старт"
+      }
+    },
+    "number": {
+      "comfort_temperature": {
+        "name": "Комфортна температура"
+      },
+      "eco_temperature": {
+        "name": "Еко температура"
+      },
+      "eco_duration": {
+        "name": "Еко продължителност"
+      },
+      "sleep_temperature": {
+        "name": "Температура за сън"
+      },
+      "sleep_duration": {
+        "name": "Продължителност на съня"
+      },
+      "delayed_start_temperature": {
+        "name": "Температура при отложен старт"
+      },
+      "delayed_start_after": {
+        "name": "Отложен старт след"
+      },
+      "temperature_correction": {
+        "name": "Корекция на температурата"
+      }
+    }
+  }
+}

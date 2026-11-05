@@ -1,7 +1,6 @@
 {
-  "name": "Tesy Convector Local Integration",
+  "name": "Tesy Convector (local)",
   "content_in_root": false,
-  "domains": ["tesy_convector_local"],
-  "country": "bg",
-  "zip_release": false
+  "homeassistant": "2025.1.0",
+  "render_readme": true
 }

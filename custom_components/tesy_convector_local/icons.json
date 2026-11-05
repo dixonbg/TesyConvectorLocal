@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "switch": {
+      "adaptive_start": {
+        "default": "mdi:clock-start"
+      },
+      "open_window_detection": {
+        "default": "mdi:window-open-variant"
+      },
+      "anti_frost": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "uv": {
+        "default": "mdi:lightbulb-fluorescent-tube"
+      },
+      "child_lock": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
+      "delayed_start": {
+        "default": "mdi:timer-play"
+      }
+    },
+    "number": {
+      "comfort_temperature": {
+        "default": "mdi:sofa"
+      },
+      "eco_temperature": {
+        "default": "mdi:leaf"
+      },
+      "eco_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "sleep_temperature": {
+        "default": "mdi:sleep"
+      },
+      "sleep_duration": {
+        "default": "mdi:timer-outline"
+      },
+      "delayed_start_temperature": {
+        "default": "mdi:timer-play"
+      },
+      "delayed_start_after": {
+        "default": "mdi:timer-play-outline"
+      },
+      "temperature_correction": {
+        "default": "mdi:thermometer-plus"
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tesy convector",
+        "description": "Local control over the convector's built-in web API. Give it a fixed IP (DHCP reservation).",
+        "data": {
+          "ip_address": "IP address",
+          "temperature_entity": "Room temperature sensor (optional)"
+        },
+        "data_description": {
+          "temperature_entity": "The convector does not report the room temperature over its local API. Pick a sensor in the same room to show it."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No answer from the convector at this address.",
+      "unsupported": "The device answered, but not like a supported Tesy convector (older Tesy units use a different API)."
+    },
+    "abort": {
+      "already_configured": "This convector is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tesy convector",
+        "data": {
+          "ip_address": "IP address",
+          "temperature_entity": "Room temperature sensor (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No answer from the convector at this address.",
+      "unsupported": "The device answered, but not like a supported Tesy convector."
+    }
+  },
+  "entity": {
+    "climate": {
+      "convector": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "none": "Heating",
+              "comfort": "Comfort",
+              "eco": "Eco",
+              "sleep": "Sleep",
+              "program": "Program"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "adaptive_start": {
+        "name": "Adaptive start"
+      },
+      "open_window_detection": {
+        "name": "Open window detection"
+      },
+      "anti_frost": {
+        "name": "Anti-frost"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "delayed_start": {
+        "name": "Delayed start"
+      }
+    },
+    "number": {
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
+      },
+      "eco_duration": {
+        "name": "Eco duration"
+      },
+      "sleep_temperature": {
+        "name": "Sleep temperature"
+      },
+      "sleep_duration": {
+        "name": "Sleep duration"
+      },
+      "delayed_start_temperature": {
+        "name": "Delayed start temperature"
+      },
+      "delayed_start_after": {
+        "name": "Delayed start after"
+      },
+      "temperature_correction": {
+        "name": "Temperature correction"
+      }
+    }
+  }
+}

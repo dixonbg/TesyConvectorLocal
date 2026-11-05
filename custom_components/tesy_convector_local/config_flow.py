@@ -1,71 +1,81 @@
+"""Config and options flow: IP address + optional room temperature sensor."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.selector import EntitySelector
-from .const import DOMAIN
 
-# Schema for the user input (IP Address)
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required("ip_address"): str,
-    vol.Optional("temperature_entity"): EntitySelector(
-        {"domain": "sensor"}  # Allow the user to select a temperature sensor entity
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
+
+from .api import TesyApiError, TesyLocalApi
+from .const import CONF_IP_ADDRESS, CONF_TEMPERATURE_ENTITY, DEFAULT_NAME, DOMAIN
+
+TEMP_SELECTOR = EntitySelector(EntitySelectorConfig(domain="sensor", device_class="temperature"))
+
+
+async def _validate(hass: HomeAssistant, host: str) -> str | None:
+    """Return an error key, or None when the convector answers."""
+    try:
+        await TesyLocalApi(async_get_clientsession(hass), host).get_status()
+    except TesyApiError as err:
+        return "unsupported" if "not a supported" in str(err) else "cannot_connect"
+    return None
+
+
+def _schema(defaults: dict[str, Any]) -> vol.Schema:
+    temp = defaults.get(CONF_TEMPERATURE_ENTITY)
+    temp_key = (
+        vol.Optional(CONF_TEMPERATURE_ENTITY, description={"suggested_value": temp})
+        if temp
+        else vol.Optional(CONF_TEMPERATURE_ENTITY)
     )
-})
+    return vol.Schema(
+        {
+            vol.Required(CONF_IP_ADDRESS, default=defaults.get(CONF_IP_ADDRESS, "")): str,
+            temp_key: TEMP_SELECTOR,
+        }
+    )
 
 
-class TesyConvectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Tesy Convector."""
+class TesyConvectorConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Add a convector."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
-
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
         if user_input is not None:
-            ip_address = user_input["ip_address"]
-
-            # Validate the IP address (You can add actual validation logic here)
-            valid = await self._test_ip_address(ip_address)
-            if valid:
-                # If valid, create the entry in HA
-                return self.async_create_entry(title="Tesy Convector", data=user_input)
-            else:
-                errors["base"] = "cannot_connect"
-
+            host = user_input[CONF_IP_ADDRESS].strip()
+            user_input[CONF_IP_ADDRESS] = host
+            self._async_abort_entries_match({CONF_IP_ADDRESS: host})
+            if not (error := await _validate(self.hass, host)):
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+            errors["base"] = error
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_schema(user_input or {}), errors=errors
         )
-
-    async def _test_ip_address(self, ip_address):
-        """Test if we can connect to the convector with the given IP address."""
-        # You could try to actually connect to the convector here to validate
-        # For now, let's assume it's valid if it follows the IP format
-        try:
-            import socket
-            socket.inet_aton(ip_address)
-            return True
-        except socket.error:
-            return False
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return TesyConvectorOptionsFlowHandler(config_entry)
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        return TesyConvectorOptionsFlow()
 
 
-class TesyConvectorOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Tesy Convector options flow."""
+class TesyConvectorOptionsFlow(OptionsFlow):
+    """Change the IP address or the room temperature sensor."""
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_IP_ADDRESS].strip()
+            user_input[CONF_IP_ADDRESS] = host
+            if not (error := await _validate(self.hass, host)):
+                return self.async_create_entry(data=user_input)
+            errors["base"] = error
+        current = {**self.config_entry.data, **self.config_entry.options}
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({}),
+            step_id="init", data_schema=_schema(user_input or current), errors=errors
         )
