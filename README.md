@@ -2,7 +2,7 @@
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 
-Local control of Wi-Fi Tesy convectors (CN06AS family) through the convector's built-in
+Local control of Wi-Fi ("Cloud") Tesy convectors (MyTESY model family "CN06AS", code `cn05uv`) through the convector's built-in
 HTTP API. No Tesy cloud account and no internet connection are needed.
 
 This is a continuation of [alexanderpp/TesyConvectorLocal](https://github.com/alexanderpp/TesyConvectorLocal),
@@ -90,12 +90,13 @@ existing entry and `climate.*` entity are kept; the MAC is learned on first star
 
 ## Supported devices
 
-Tested on a **Tesy FinEco Cloud CN 06 200 EA CLOUD AS W** (2000 W, firmware 4.79; MyTESY model
-code `cn05uv`, "Convector CN06AS").
+Tested on a **Tesy CN 052 200 EI CLOUD W F** (2000 W free-standing convector with tip-over switch,
+2022, firmware 4.79). MyTESY reports it as model code `cn05uv`, "Convector CN06AS". The Kosztyk
+project confirms the same firmware on CN06AS wall units.
 
 Likely to work (same app and model family, not tested yet; reports welcome, ideally with diagnostics):
-other **FinEco Cloud CN 06** sizes and the Glass version, **LivEco Cloud CN 051** and
-**HeatEco Cloud CN 031**. Tesy water heaters use a different API, see
+**FinEco Cloud CN 06** (all sizes, Glass), **LivEco Cloud CN 051/052** and **HeatEco Cloud CN 031**.
+The **UV** switch only does something on AirSafe ("AS") models; others accept and ignore it. Tesy water heaters use a different API, see
 [krasnoukhov/homeassistant-tesy](https://github.com/krasnoukhov/homeassistant-tesy).
 
 Other convectors that answer
