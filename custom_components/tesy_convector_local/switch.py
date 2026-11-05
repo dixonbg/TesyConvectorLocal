@@ -25,7 +25,9 @@ SWITCHES = (
                           command="setOpenedWindow", entity_category=EntityCategory.CONFIG),
     TesySwitchDescription(key="anti_frost", translation_key="anti_frost",
                           command="setAntiFrost", entity_category=EntityCategory.CONFIG),
-    TesySwitchDescription(key="uv", translation_key="uv", command="setUV"),
+    # AirSafe UVA LEDs; only "AS" models have them, others accept and ignore it
+    TesySwitchDescription(key="uv", translation_key="uv", command="setUV",
+                          entity_category=EntityCategory.CONFIG),
     TesySwitchDescription(key="child_lock", translation_key="child_lock",
                           command="setLockDevice", entity_category=EntityCategory.CONFIG),
     TesySwitchDescription(key="delayed_start", translation_key="delayed_start",
