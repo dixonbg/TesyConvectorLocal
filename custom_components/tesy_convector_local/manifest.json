@@ -10,6 +10,8 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/dixonbg/TesyConvectorLocal/issues",
-  "requirements": [],
-  "version": "2.0.0"
+  "requirements": [
+    "paho-mqtt>=2.1.0"
+  ],
+  "version": "2.1.0b1"
 }

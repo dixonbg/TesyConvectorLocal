@@ -33,6 +33,10 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.host: str = conf[CONF_IP_ADDRESS]
         self.temperature_entity: str | None = conf.get(CONF_TEMPERATURE_ENTITY)
         self.api = TesyLocalApi(async_get_clientsession(hass), self.host)
+        # optional MyTESY cloud telemetry, set up in __init__.py
+        self.cloud = None
+        self.cloud_account = None
+        self.cloud_error: str | None = None
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,

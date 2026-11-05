@@ -27,13 +27,26 @@
         "title": "Tesy convector",
         "data": {
           "ip_address": "IP address",
-          "temperature_entity": "Room temperature sensor (optional)"
+          "temperature_entity": "Room temperature sensor (optional)",
+          "cloud_email": "MyTESY email (optional)",
+          "cloud_password": "MyTESY password"
+        },
+        "description": "Optional: a MyTESY login adds read-only cloud data the local API lacks (heating on/off, the convector's own temperature). Local control keeps working without it. Leave the password blank to keep the saved one; clear the email to remove the login."
+      },
+      "cloud_device": {
+        "title": "MyTESY device",
+        "description": "The account has {count} device(s). Pick this convector, or — for none.",
+        "data": {
+          "cloud_device": "Device"
         }
       }
     },
     "error": {
       "cannot_connect": "No answer from the convector at this address.",
-      "unsupported": "The device answered, but not like a supported Tesy convector."
+      "unsupported": "The device answered, but not like a supported Tesy convector.",
+      "invalid_auth": "MyTESY rejected the email or password.",
+      "cloud_cannot_connect": "Could not reach MyTESY.",
+      "cloud_password_missing": "Enter the MyTESY password."
     }
   },
   "entity": {
@@ -96,6 +109,16 @@
       },
       "temperature_correction": {
         "name": "Temperature correction"
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      }
+    },
+    "sensor": {
+      "internal_temperature": {
+        "name": "Internal temperature"
       }
     }
   }

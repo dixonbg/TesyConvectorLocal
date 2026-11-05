@@ -20,6 +20,21 @@ options dialog, the convector dropping offline) and exposes every setting the lo
 Durations are in minutes. The Program preset follows the weekly schedule set in the Tesy app;
 the schedule itself can't be edited over the local API.
 
+### Optional: MyTESY cloud telemetry (beta)
+
+Under **Configure** you can add the MyTESY login of the account the convector is registered to.
+The integration then reads, without ever sending commands to the cloud:
+
+| Entity | Source |
+|---|---|
+| Heating (binary sensor) | `heating` in the convector's `setTempStatistic` MQTT messages |
+| Internal temperature | `currentTemp` in the same messages (the convector's own sensor) |
+
+The broker address and broker login are read from MyTESY's `/get-app-settings` at runtime;
+nothing is hardcoded. Local control keeps working if the cloud is down. **Diagnostics**
+(device page → ⋮ → Download diagnostics) shows what the cloud returned, with secrets masked.
+Approach based on the investigation in [Tazmania0/TesyConvectorLocal](https://github.com/Tazmania0/TesyConvectorLocal) (MIT).
+
 ### What the local API does not provide
 
 The convector does not report its room temperature, whether the element is heating right now,

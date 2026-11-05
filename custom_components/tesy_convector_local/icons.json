@@ -48,6 +48,14 @@
       "temperature_correction": {
         "default": "mdi:thermometer-plus"
       }
+    },
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
+      }
     }
   }
 }
