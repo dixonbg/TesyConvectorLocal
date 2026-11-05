@@ -6,14 +6,6 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/dixonbg/TesyConvectorLocal",
-  "integration_type": "device",
-  "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/dixonbg/TesyConvectorLocal/issues",
-  "requirements": [
-    "paho-mqtt>=2.1.0"
-  ],
-  "version": "2.2.0b5",
   "dhcp": [
     {
       "hostname": "espressif*"
@@ -24,5 +16,13 @@
     {
       "registered_devices": true
     }
-  ]
+  ],
+  "documentation": "https://github.com/dixonbg/TesyConvectorLocal",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/dixonbg/TesyConvectorLocal/issues",
+  "requirements": [
+    "paho-mqtt>=2.1.0"
+  ],
+  "version": "2.2.0b5"
 }
