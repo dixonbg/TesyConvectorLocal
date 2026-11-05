@@ -28,9 +28,12 @@ class TesyNumberDescription(NumberEntityDescription):
     extra: tuple[str, ...] = ()
 
 
-def _temp(key: str, command: str, extra: tuple[str, ...] = ()) -> TesyNumberDescription:
+def _temp(
+    key: str, command: str, extra: tuple[str, ...] = (), enabled: bool = True
+) -> TesyNumberDescription:
     return TesyNumberDescription(
         key=key, translation_key=key, command=command, field="temp", extra=extra,
+        entity_registry_enabled_default=enabled,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10, native_max_value=30, native_step=1,
@@ -38,9 +41,12 @@ def _temp(key: str, command: str, extra: tuple[str, ...] = ()) -> TesyNumberDesc
     )
 
 
-def _minutes(key: str, command: str, extra: tuple[str, ...]) -> TesyNumberDescription:
+def _minutes(
+    key: str, command: str, extra: tuple[str, ...], enabled: bool = True
+) -> TesyNumberDescription:
     return TesyNumberDescription(
         key=key, translation_key=key, command=command, field="time", extra=extra,
+        entity_registry_enabled_default=enabled,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0, native_max_value=1440, native_step=30,
@@ -54,8 +60,10 @@ NUMBERS = (
     _minutes("eco_duration", "setEcoTemp", ("temp",)),
     _temp("sleep_temperature", "setSleepTemp", ("time",)),
     _minutes("sleep_duration", "setSleepTemp", ("temp",)),
-    _temp("delayed_start_temperature", "setDelayedStart", ("status", "time")),
-    _minutes("delayed_start_after", "setDelayedStart", ("status", "temp")),
+    # delayed start is rarely used, and the firmware copies the setpoint into its temperature,
+    # so these change whenever the target does: off by default, like the delayed-start switch
+    _temp("delayed_start_temperature", "setDelayedStart", ("status", "time"), enabled=False),
+    _minutes("delayed_start_after", "setDelayedStart", ("status", "temp"), enabled=False),
     TesyNumberDescription(
         key="temperature_correction", translation_key="temperature_correction",
         command="setTCorrection", field="temp",
