@@ -14,8 +14,12 @@ options dialog, the convector dropping offline) and exposes every setting the lo
 | Entity | What it does |
 |---|---|
 | Climate | On/off, target temperature, presets **Heating** (none), **Comfort**, **Eco**, **Sleep**, **Program**. The target shown is the active mode's temperature. |
-| Switches | Adaptive start, open window detection, anti-frost, UV, child lock, delayed start |
+| Switches | Adaptive start, open window detection, anti-frost, AirSafe (UV), child lock (all under Configuration); delayed start |
 | Numbers | Comfort / eco / sleep temperature, eco and sleep duration, delayed-start temperature and delay, temperature correction (−4…+4 °C, slider) |
+
+To keep dashboards short, **Delayed start**, the cloud **Heating** sensor and **Power** are disabled by
+default (the thermostat already shows heating/idle; Energy keeps counting either way). Enable them on
+the device page if you want them.
 
 Durations are in minutes. The Program preset follows the weekly schedule set in the Tesy app;
 the schedule itself can't be edited over the local API.

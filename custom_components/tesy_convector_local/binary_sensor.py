@@ -21,6 +21,8 @@ class TesyHeating(TesyCloudEntity, BinarySensorEntity):
     """On while the heating element is on (cloud telemetry)."""
 
     _attr_device_class = BinarySensorDeviceClass.HEAT
+    # the thermostat already shows heating/idle; off by default
+    _attr_entity_registry_enabled_default = False
     _attr_translation_key = "heating"
     _key = "heating"
 

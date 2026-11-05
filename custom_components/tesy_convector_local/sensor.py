@@ -60,6 +60,8 @@ class TesyPower(TesyCloudEntity, SensorEntity):
     """App wattage while heating, 0 W while idle."""
 
     _attr_device_class = SensorDeviceClass.POWER
+    # Energy and the thermostat's heating/idle cover it; off by default
+    _attr_entity_registry_enabled_default = False
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_translation_key = "power"

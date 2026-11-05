@@ -30,8 +30,9 @@ SWITCHES = (
                           entity_category=EntityCategory.CONFIG),
     TesySwitchDescription(key="child_lock", translation_key="child_lock",
                           command="setLockDevice", entity_category=EntityCategory.CONFIG),
+    # rarely used: off by default, enable it on the device page when needed
     TesySwitchDescription(key="delayed_start", translation_key="delayed_start",
-                          command="setDelayedStart"),
+                          command="setDelayedStart", entity_registry_enabled_default=False),
 )
 
 
