@@ -29,7 +29,7 @@ The integration then reads, without ever sending commands to the cloud:
 |---|---|
 | Heating (binary sensor) | `heating` in the convector's `setTempStatistic` MQTT messages |
 | Internal temperature | `currentTemp` in the same messages (the convector's own sensor, 0.5 °C steps) |
-| Power | the wattage entered in the MyTESY app while heating, else 0 W |
+| Power | while heating: **Power while heating** from Configure if set, else the wattage entered in the MyTESY app; 0 W while idle |
 | Energy (kWh, for the Energy dashboard) | power added up over time |
 | Device model and firmware | `get-my-devices` (`model_type`, `firmware_version`), shown on the device page |
 
@@ -44,6 +44,11 @@ app (read at login; reload the integration after changing it). Heating time whil
 the cloud is disconnected is not counted. The energy sensor shows Tesy's own hourly figure
 (`tesy_last_hour_heating_s`, `tesy_last_hour_kwh`) for comparison. For measured energy use a
 metering smart plug.
+
+The label wattage is nominal. Measured on a CN 052 200 (2000 W label) with a whole-home meter: about
+**1,900 W** (manual: 1.91 kW), a few % more in the first minute while the element warms up. Enter the
+measured value under **Configure → Power while heating** for a closer estimate; leave it empty to use
+the app's value. The attributes `power_used_w` and `power_source` show which one is used.
 
 The climate entity uses them too: its **action** shows *heating* / *idle*, and the convector's own
 temperature (0.5 °C steps) is the `internal_temperature` attribute. Without a room sensor it is also
