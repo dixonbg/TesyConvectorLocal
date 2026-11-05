@@ -14,6 +14,7 @@ REDACT = {
     CONF_CLOUD_EMAIL, CONF_CLOUD_PASSWORD, "email", "password", "userEmail", "userPass", "userID",
     "token", "MQTT_USERNAME", "MQTT_PASS", "app_id", "wifi_pass", "ssid", "wifi_ssid", "ip",
     "acc_session", "session", "lat", "lng", "address", "mac", "MAC", "wan_ip", "deviceName",
+    "firstName", "lastName", "oldAppEmail", "oldAppPassword",
 }
 
 
@@ -30,7 +31,14 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: TesyCon
     }
     if account := coordinator.cloud_account:
         out["cloud_login_keys"] = sorted(account.user)
-        out["app_settings"] = async_redact_data(account.app_settings, REDACT)
+        # app-wide vendor settings hold other keys and passwords: show only the broker address
+        settings = account.app_settings
+        out["app_settings"] = {
+            "MQTT_PROD_URL": settings.get("MQTT_PROD_URL"),
+            "MQTT_PORT": settings.get("MQTT_PORT"),
+            "has_broker_login": bool(settings.get("MQTT_USERNAME") and settings.get("MQTT_PASS")),
+            "keys": sorted(settings),
+        }
         out["devices"] = {
             _mask_mac(mac): async_redact_data(dev, REDACT) for mac, dev in account.devices.items()
         }
