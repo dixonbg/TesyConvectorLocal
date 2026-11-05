@@ -13,7 +13,14 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import TesyApiError, TesyLocalApi
-from .const import CONF_IP_ADDRESS, CONF_POWER, CONF_TEMPERATURE_ENTITY, DEFAULT_MODEL, DOMAIN
+from .const import (
+    CONF_IP_ADDRESS,
+    CONF_POWER,
+    CONF_TEMPERATURE_ENTITY,
+    DEFAULT_MODEL,
+    DOMAIN,
+    MYTESY_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +54,9 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             name=entry.title,
             manufacturer="Tesy",
             model=DEFAULT_MODEL,
-            configuration_url=f"http://{self.host}/",
+            # the convector's own web page only says "use POST"; MyTESY is where its settings are.
+            # Only the site root opens from a link: deep links (/statistics/<mac>) give 404.
+            configuration_url=MYTESY_URL,
         )
 
     @property
