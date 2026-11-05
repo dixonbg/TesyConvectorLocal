@@ -15,7 +15,7 @@ options dialog, the convector dropping offline) and exposes every setting the lo
 |---|---|
 | Climate | On/off, target temperature, presets **Heating** (none), **Comfort**, **Eco**, **Sleep**, **Program**. The target shown is the active mode's temperature. |
 | Switches | Adaptive start, open window detection, anti-frost, UV, child lock, delayed start |
-| Numbers | Comfort / eco / sleep temperature, eco and sleep duration, delayed-start temperature and delay, temperature correction (−4…+4 °C) |
+| Numbers | Comfort / eco / sleep temperature, eco and sleep duration, delayed-start temperature and delay, temperature correction (−4…+4 °C, slider) |
 
 Durations are in minutes. The Program preset follows the weekly schedule set in the Tesy app;
 the schedule itself can't be edited over the local API.
@@ -87,9 +87,12 @@ setup reports them as "not a supported Tesy convector".
 | `setTemp`, `setComfortTemp` | `{"temp": 10…30}` |
 | `setEcoTemp`, `setSleepTemp` | `{"temp": …, "time": minutes}` |
 | `setDelayedStart` | `{"status": …, "time": minutes, "temp": …}` |
-| `setTCorrection` | `{"temp": …}` |
+| `setTCorrection` | `{"temp": …}` (−4…4; outside is clamped) |
 | `setAdaptiveStart`, `setOpenedWindow`, `setAntiFrost`, `setUV`, `setLockDevice` | `{"status": "on"\|"off"}` |
 | `getSSID` | settings plus `wifiinfo` (list of visible networks) |
+
+Temperatures are whole °C: decimals are accepted but rounded on store (23.5 → 24). Send
+`Content-Type: application/json`; a form-encoded body is read as `temp: 0`.
 
 The web server handles one request at a time and resets reused or overlapping connections; the
 integration sends one request at a time with `Connection: close` and retries.

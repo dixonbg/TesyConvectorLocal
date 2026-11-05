@@ -61,8 +61,10 @@ NUMBERS = (
         command="setTCorrection", field="temp",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        # device range, tested: values outside are clamped, decimals rounded.
+        # Slider, as phone number pads often lack a minus key.
         native_min_value=-4, native_max_value=4, native_step=1,
-        mode=NumberMode.BOX, entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.SLIDER, entity_category=EntityCategory.CONFIG,
     ),
 )
 
