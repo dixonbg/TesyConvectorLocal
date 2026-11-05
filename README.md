@@ -30,6 +30,11 @@ The integration then reads, without ever sending commands to the cloud:
 | Heating (binary sensor) | `heating` in the convector's `setTempStatistic` MQTT messages |
 | Internal temperature | `currentTemp` in the same messages (the convector's own sensor) |
 
+The climate entity uses them too: its **action** shows *heating* / *idle*, and the convector's own
+temperature (0.5 °C steps) is the `internal_temperature` attribute. Without a room sensor it is also
+the climate's current temperature. In tests the convector switched on at setpoint −1 °C and off at the
+setpoint, by its own reading.
+
 The broker address and broker login are read from MyTESY's `/get-app-settings` at runtime;
 nothing is hardcoded. Local control keeps working if the cloud is down. **Diagnostics**
 (device page → ⋮ → Download diagnostics) shows what the cloud returned, with secrets masked.
@@ -42,7 +47,7 @@ its power, firmware or Wi-Fi signal over the local API (only the Tesy cloud gets
 
 - choose a **room temperature sensor** during setup to show the current temperature
   (it updates the climate entity whenever the sensor changes);
-- for real heating state and energy, put the convector on a metering smart plug.
+- for heating state without the cloud, or measured energy, put the convector on a metering smart plug.
 
 ## Installation
 

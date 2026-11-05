@@ -3,6 +3,11 @@
 Device modes (setMode "name", tested on a CN06AS): heating (normal, uses setTemp),
 comfort / eco / sleep (use setComfortTemp / setEcoTemp / setSleepTemp) and program
 (weekly schedule set in the Tesy app). Unknown names are answered "OK" but ignored.
+
+With a MyTESY cloud login, the cloud adds what the local API lacks: whether the element is
+heating (shown as the HVAC action) and the convector's own temperature (0.5 °C steps). The
+room sensor, when set, stays the current temperature; without one the convector's own
+reading is used.
 """
 from __future__ import annotations
 
@@ -15,6 +20,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -75,6 +81,8 @@ class TesyClimate(CoordinatorEntity[TesyCoordinator], ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        if cloud := self.coordinator.cloud:
+            self.async_on_remove(cloud.add_listener(self.async_write_ha_state))
         if self.coordinator.temperature_entity:
             self.async_on_remove(
                 async_track_state_change_event(
@@ -104,9 +112,24 @@ class TesyClimate(CoordinatorEntity[TesyCoordinator], ClimateEntity):
         return self.coordinator.value(command, "temp") if command else None
 
     @property
+    def _internal_temperature(self) -> float | None:
+        """The convector's own reading from the cloud, while the cloud is connected."""
+        cloud = self.coordinator.cloud
+        return cloud.current_temp if cloud and cloud.connected else None
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        if self.hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
+        cloud = self.coordinator.cloud
+        if not cloud or not cloud.connected or cloud.heating is None:
+            return None  # local API alone can't tell
+        return HVACAction.HEATING if cloud.heating else HVACAction.IDLE
+
+    @property
     def native_current_temperature(self) -> float | None:
         if not (entity_id := self.coordinator.temperature_entity):
-            return None
+            return self._internal_temperature
         state = self.hass.states.get(entity_id)
         try:
             return float(state.state)
@@ -115,7 +138,10 @@ class TesyClimate(CoordinatorEntity[TesyCoordinator], ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"device_mode": self._mode}
+        attrs: dict[str, Any] = {"device_mode": self._mode}
+        if self.coordinator.cloud:
+            attrs["internal_temperature"] = self._internal_temperature
+        return attrs
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         status = "on" if hvac_mode == HVACMode.HEAT else "off"
