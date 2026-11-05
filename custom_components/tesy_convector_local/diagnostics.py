@@ -14,7 +14,7 @@ REDACT = {
     CONF_CLOUD_EMAIL, CONF_CLOUD_PASSWORD, "email", "password", "userEmail", "userPass", "userID",
     "token", "MQTT_USERNAME", "MQTT_PASS", "app_id", "wifi_pass", "ssid", "wifi_ssid", "ip",
     "acc_session", "session", "lat", "lng", "address", "mac", "MAC", "wan_ip", "deviceName",
-    "firstName", "lastName", "oldAppEmail", "oldAppPassword",
+    "firstName", "lastName", "oldAppEmail", "oldAppPassword", "ap_pass", "httpAddr",
 }
 
 
