@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import TesyApiError, TesyLocalApi
-from .const import CONF_IP_ADDRESS, CONF_TEMPERATURE_ENTITY, DEFAULT_MODEL, DOMAIN
+from .const import CONF_IP_ADDRESS, CONF_POWER, CONF_TEMPERATURE_ENTITY, DEFAULT_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +49,19 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             model=DEFAULT_MODEL,
             configuration_url=f"http://{self.host}/",
         )
+
+    @property
+    def power(self) -> int | None:
+        """W while heating: the Configure value if set, else the MyTESY app value."""
+        if override := self.config_entry.options.get(CONF_POWER):
+            return int(override)
+        return self.cloud.watt if self.cloud else None
+
+    @property
+    def power_source(self) -> str | None:
+        if self.config_entry.options.get(CONF_POWER):
+            return "configure"
+        return "mytesy_app" if self.cloud and self.cloud.watt else None
 
     def set_cloud_details(self, cloud: Any) -> None:
         """Model and firmware are only known from the MyTESY cloud."""

@@ -43,13 +43,15 @@
           "temperature_entity": "Room temperature sensor",
           "cloud_email": "MyTESY email",
           "cloud_password": "MyTESY password",
-          "ip_address": "IP address"
+          "ip_address": "IP address",
+          "power": "Power while heating"
         },
         "data_description": {
           "temperature_entity": "Shown as the current temperature on the thermostat card.",
           "cloud_email": "Adds what the local API lacks: Heating on/off and the convector's own temperature. Read-only (nothing is sent to the cloud). Use the account the convector is registered to. Clear to remove.",
           "cloud_password": "Stays in Home Assistant. Leave blank to keep the saved one, or to reuse the one saved for the same email on another convector.",
-          "ip_address": "Only if the convector moved and wasn't rediscovered."
+          "ip_address": "Only if the convector moved and wasn't rediscovered.",
+          "power": "For the Power and Energy sensors (they need the MyTESY login). Leave empty to use the wattage set in the MyTESY app ({app_power}). Enter a measured value to be more exact, e.g. 1900 for a 2000 W unit."
         }
       },
       "cloud_device": {

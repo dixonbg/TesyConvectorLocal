@@ -21,6 +21,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -37,6 +40,7 @@ from .const import (
     CONF_CLOUD_EMAIL,
     CONF_CLOUD_PASSWORD,
     CONF_IP_ADDRESS,
+    CONF_POWER,
     CONF_TEMPERATURE_ENTITY,
     DEFAULT_NAME,
     DOMAIN,
@@ -46,6 +50,9 @@ from .net import async_mac_for_ip
 TEMP_SELECTOR = EntitySelector(EntitySelectorConfig(domain="sensor", device_class="temperature"))
 EMAIL_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL))
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+POWER_SELECTOR = NumberSelector(
+    NumberSelectorConfig(min=100, max=5000, step=10, mode=NumberSelectorMode.BOX, unit_of_measurement="W")
+)
 NO_CLOUD_DEVICE = "none"
 
 
@@ -172,6 +179,8 @@ class TesyConvectorOptionsFlow(OptionsFlow):
                 if host != entry.data.get(CONF_IP_ADDRESS):
                     self.hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_IP_ADDRESS: host})
                 self._options = {CONF_TEMPERATURE_ENTITY: user_input.get(CONF_TEMPERATURE_ENTITY)}
+                if power := user_input.get(CONF_POWER):
+                    self._options[CONF_POWER] = int(power)
                 if not email:
                     return self.async_create_entry(data=self._options)
                 account = TesyCloudAccount(async_get_clientsession(self.hass), email, password)
@@ -198,14 +207,21 @@ class TesyConvectorOptionsFlow(OptionsFlow):
             _optional(CONF_TEMPERATURE_ENTITY, defaults.get(CONF_TEMPERATURE_ENTITY)): TEMP_SELECTOR,
             _optional(CONF_CLOUD_EMAIL, email): EMAIL_SELECTOR,
             vol.Optional(CONF_CLOUD_PASSWORD): PASSWORD_SELECTOR,
+            _optional(CONF_POWER, defaults.get(CONF_POWER)): POWER_SELECTOR,
             vol.Required(CONF_IP_ADDRESS, default=entry.data.get(CONF_IP_ADDRESS, "")): str,
         }
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
             errors=errors,
-            description_placeholders={"mac": entry.unique_id or "?"},
+            description_placeholders={"mac": entry.unique_id or "?", "app_power": self._app_power()},
         )
+
+    def _app_power(self) -> str:
+        """The wattage set in the MyTESY app, for the form text."""
+        coordinator = getattr(self.config_entry, "runtime_data", None)
+        cloud = getattr(coordinator, "cloud", None)
+        return f"{cloud.watt} W" if cloud and cloud.watt else "-"
 
     async def async_step_cloud_device(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Fallback when the MAC isn't known or isn't on the account."""

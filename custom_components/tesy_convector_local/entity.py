@@ -20,6 +20,7 @@ class TesyCloudEntity(Entity):
 
     def __init__(self, coordinator: TesyCoordinator) -> None:
         self.cloud: TesyDeviceTelemetry = coordinator.cloud
+        self._coordinator = coordinator
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_cloud_{self._key}"
         self._attr_device_info = coordinator.device_info
 

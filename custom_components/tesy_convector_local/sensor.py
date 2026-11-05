@@ -1,8 +1,9 @@
 """Sensors from MyTESY cloud telemetry (only with a cloud login).
 
 - Internal temperature: the convector's own reading (0.5 °C steps).
-- Power: the wattage set in the MyTESY app while the element heats, else 0 W. An estimate, like
-  the Tesy app's: the convector measures nothing, it only reports when it heats.
+- Power: while the element heats, the wattage from Configure if set, else the one set in the
+  MyTESY app; 0 W while idle. An estimate, like the Tesy app's: the convector measures nothing,
+  it only reports when it heats.
 - Energy: power added up over time (for the Energy dashboard). Heating time while the cloud is
   disconnected or HA is stopped is not counted.
 """
@@ -36,7 +37,7 @@ async def async_setup_entry(
     if not (cloud := coordinator.cloud):
         return
     entities: list[SensorEntity] = [TesyInternalTemperature(coordinator)]
-    if cloud.watt:
+    if coordinator.power:
         entities += [TesyPower(coordinator), TesyEnergy(coordinator)]
     async_add_entities(entities)
 
@@ -68,11 +69,11 @@ class TesyPower(TesyCloudEntity, SensorEntity):
     def native_value(self) -> int | None:
         if self.cloud.heating is None:
             return None
-        return self.cloud.watt if self.cloud.heating else 0
+        return self._coordinator.power if self.cloud.heating else 0
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {**super().extra_state_attributes, "rated_power_from_app": self.cloud.watt}
+        return {**super().extra_state_attributes, **_power_attrs(self)}
 
 
 class TesyEnergy(TesyCloudEntity, RestoreSensor):
@@ -105,14 +106,14 @@ class TesyEnergy(TesyCloudEntity, RestoreSensor):
     def _counting(self, now: float) -> bool:
         cloud = self.cloud
         return bool(
-            cloud.connected and cloud.heating and cloud.watt
+            cloud.connected and cloud.heating and self._coordinator.power
             and cloud.last_telemetry and now - cloud.last_telemetry < STALE_AFTER
         )
 
     def _account(self) -> None:
         now = time.time()
         if self._since is not None:
-            self._kwh += self.cloud.watt * (now - self._since) / 3_600_000
+            self._kwh += self._coordinator.power * (now - self._since) / 3_600_000
         self._since = now if self._counting(now) else None
 
     @callback
@@ -131,10 +132,18 @@ class TesyEnergy(TesyCloudEntity, RestoreSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        attrs = {**super().extra_state_attributes, "rated_power_from_app": self.cloud.watt}
+        attrs = {**super().extra_state_attributes, **_power_attrs(self)}
         if hour := self.cloud.last_hour:
             # Tesy's own hourly figure, to compare with ours
             attrs["tesy_last_hour"] = f"{hour['from']}-{hour['to']}"
             attrs["tesy_last_hour_heating_s"] = hour["seconds"]
-            attrs["tesy_last_hour_kwh"] = round(hour["seconds"] * self.cloud.watt / 3_600_000, 3)
+            attrs["tesy_last_hour_kwh"] = round(hour["seconds"] * self._coordinator.power / 3_600_000, 3)
         return attrs
+
+
+def _power_attrs(entity: TesyCloudEntity) -> dict[str, Any]:
+    return {
+        "power_used_w": entity._coordinator.power,
+        "power_source": entity._coordinator.power_source,
+        "power_in_mytesy_app_w": entity.cloud.watt,
+    }
