@@ -55,7 +55,7 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             manufacturer="Tesy",
             model=DEFAULT_MODEL,
             # the convector's own web page only says "use POST"; MyTESY is where its settings are.
-            # Only the site root opens from a link: deep links (/statistics/<mac>) give 404.
+            # Only the www entry page works from a link (it redirects into the v4 app); deep links and reloads inside v4 give 404.
             configuration_url=MYTESY_URL,
         )
 
