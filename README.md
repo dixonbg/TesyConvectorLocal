@@ -96,7 +96,7 @@ project confirms the same firmware on CN06AS wall units.
 
 Likely to work (same app and model family, not tested yet; reports welcome, ideally with diagnostics):
 **FinEco Cloud CN 06** (all sizes, Glass), **LivEco Cloud CN 051/052** and **HeatEco Cloud CN 031**.
-The **UV** switch only does something on AirSafe ("AS") models; others accept and ignore it. Tesy water heaters use a different API, see
+The **AirSafe (UV)** switch (under Configuration) only does something on AirSafe ("AS") models; others accept and ignore it. Tesy water heaters use a different API, see
 [krasnoukhov/homeassistant-tesy](https://github.com/krasnoukhov/homeassistant-tesy).
 
 Other convectors that answer
