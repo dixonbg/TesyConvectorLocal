@@ -47,16 +47,26 @@ its power, firmware or Wi-Fi signal over the local API (only the Tesy cloud gets
 ## Installation
 
 1. HACS → ⋮ → **Custom repositories** → add `https://github.com/dixonbg/TesyConvectorLocal`,
-   type **Integration**.
-2. Install **Tesy Convector (local)** and restart Home Assistant.
-3. **Settings → Devices & services → Add integration → Tesy Convector (local)**, enter the
-   convector's IP address and optionally a room temperature sensor.
+   type **Integration**. Install **Tesy Convector (local)** and restart Home Assistant.
+2. Convectors on your network are **discovered by themselves**: a "Discovered: Tesy convector"
+   card appears under **Settings → Devices & services**. Click **Add** for each one you want
+   (**Ignore** the others). Adding 2 of 4 convectors is just 2 clicks.
+3. Optional, per convector: pick a room temperature sensor (the convector doesn't report one).
 
-Give the convector a fixed IP (a DHCP reservation in your router). The IP and the sensor can be
-changed later under **Configure**.
+Not discovered (other VLAN, no DHCP traffic seen yet)? **Add integration → Tesy Convector
+(local)** and type its IP. Home Assistant reads the convector's MAC by itself.
+
+**No IP reservation needed.** Each convector is identified by its MAC; when it gets a new IP,
+discovery updates it.
+
+**Configure** (per convector): room sensor, optional MyTESY login (see above), IP. The MyTESY
+device is matched by MAC automatically. One MyTESY login serves several convectors: enter it on
+the first one; on the next ones the email is suggested and the password can be left blank. All
+convectors of one account share one cloud connection. A convector registered to someone else's
+account can use that account instead.
 
 Upgrading from alexanderpp 1.0: replace the repository in HACS with this one and install. The
-existing entry and `climate.*` entity are kept (the climate entity now has a unique ID).
+existing entry and `climate.*` entity are kept; the MAC is learned on first start.
 
 ## Supported devices
 

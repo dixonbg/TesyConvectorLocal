@@ -1,49 +1,68 @@
 {
   "config": {
+    "flow_title": "Tesy convector ({host})",
     "step": {
       "user": {
         "title": "Tesy convector",
-        "description": "Local control over the convector's built-in web API. Give it a fixed IP (DHCP reservation).",
+        "description": "Usually you don't need this form: convectors on your network are discovered by themselves. To add one by hand, enter its IP address (the router's client list shows it).",
         "data": {
           "ip_address": "IP address",
           "temperature_entity": "Room temperature sensor (optional)"
         },
         "data_description": {
-          "temperature_entity": "The convector does not report the room temperature over its local API. Pick a sensor in the same room to show it."
+          "ip_address": "Used for local control. If the address changes later, Home Assistant picks up the new one when it sees the convector again.",
+          "temperature_entity": "The convector doesn't report the room temperature. Pick a sensor in the same room to show it on the thermostat card."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Tesy convector found",
+        "description": "A Tesy convector answered at {host}. Add it? Control is local: no account or internet needed.",
+        "data": {
+          "temperature_entity": "Room temperature sensor (optional)"
+        },
+        "data_description": {
+          "temperature_entity": "The convector doesn't report the room temperature. Pick a sensor in the same room to show it on the thermostat card."
         }
       }
     },
     "error": {
-      "cannot_connect": "No answer from the convector at this address.",
+      "cannot_connect": "No answer from a convector at this address.",
       "unsupported": "The device answered, but not like a supported Tesy convector (older Tesy units use a different API)."
     },
     "abort": {
-      "already_configured": "This convector is already configured."
+      "already_configured": "This convector is already set up.",
+      "not_tesy_device": "Not a Tesy convector."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Tesy convector",
+        "title": "Tesy convector settings",
+        "description": "Everything here is optional. Device MAC: {mac}.",
         "data": {
-          "ip_address": "IP address",
-          "temperature_entity": "Room temperature sensor (optional)",
-          "cloud_email": "MyTESY email (optional)",
-          "cloud_password": "MyTESY password"
+          "temperature_entity": "Room temperature sensor",
+          "cloud_email": "MyTESY email",
+          "cloud_password": "MyTESY password",
+          "ip_address": "IP address"
         },
-        "description": "Optional: a MyTESY login adds read-only cloud data the local API lacks (heating on/off, the convector's own temperature). Local control keeps working without it. Leave the password blank to keep the saved one; clear the email to remove the login."
+        "data_description": {
+          "temperature_entity": "Shown as the current temperature on the thermostat card.",
+          "cloud_email": "Adds what the local API lacks: Heating on/off and the convector's own temperature. Read-only (nothing is sent to the cloud). Use the account the convector is registered to. Clear to remove.",
+          "cloud_password": "Stays in Home Assistant. Leave blank to keep the saved one, or to reuse the one saved for the same email on another convector.",
+          "ip_address": "Only if the convector moved and wasn't rediscovered."
+        }
       },
       "cloud_device": {
-        "title": "MyTESY device",
-        "description": "The account has {count} device(s). Pick this convector, or — for none.",
+        "title": "Which device is this convector?",
+        "description": "This convector (MAC {mac}) wasn't found automatically among the {count} device(s) on the account. Pick it, or — for none.",
         "data": {
           "cloud_device": "Device"
         }
       }
     },
     "error": {
-      "cannot_connect": "No answer from the convector at this address.",
-      "unsupported": "The device answered, but not like a supported Tesy convector.",
+      "cannot_connect": "No answer from a convector at this address.",
+      "unsupported": "The device answered, but not like a supported Tesy convector (older Tesy units use a different API).",
       "invalid_auth": "MyTESY rejected the email or password.",
       "cloud_cannot_connect": "Could not reach MyTESY.",
       "cloud_password_missing": "Enter the MyTESY password."

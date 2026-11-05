@@ -25,6 +25,7 @@ def _mask_mac(mac: str) -> str:
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: TesyConfigEntry) -> dict[str, Any]:
     coordinator = entry.runtime_data
     out: dict[str, Any] = {
+        "mac_known": bool(entry.unique_id),
         "options": async_redact_data(dict(entry.options), REDACT),
         "local_status": coordinator.data,
         "cloud_error": coordinator.cloud_error,
@@ -46,9 +47,10 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: TesyCon
         now = time.time()
         out["mqtt"] = {
             "connected": cloud.connected,
-            "last_error": cloud.last_error,
+            "last_error": cloud.hub.last_error,
+            "devices_on_connection": len(cloud.hub.devices),
             "model": cloud.model,
-            "subscriptions": cloud.subscribe_results,
+            "subscriptions": cloud.hub.subscriptions,
             "heating": cloud.heating,
             "current_temp": cloud.current_temp,
             "seconds_since_telemetry": round(now - cloud.last_telemetry) if cloud.last_telemetry else None,

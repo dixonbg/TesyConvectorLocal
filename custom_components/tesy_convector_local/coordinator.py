@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import TesyApiError, TesyLocalApi
@@ -29,12 +29,17 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         super().__init__(
             hass, _LOGGER, config_entry=entry, name=f"Tesy {entry.title}", update_interval=SCAN_INTERVAL
         )
-        conf = {**entry.data, **entry.options}
-        self.host: str = conf[CONF_IP_ADDRESS]
-        self.temperature_entity: str | None = conf.get(CONF_TEMPERATURE_ENTITY)
+        self.host: str = entry.data[CONF_IP_ADDRESS]
+        # options win (Configure), data holds what the first setup stored
+        self.temperature_entity: str | None = (
+            entry.options[CONF_TEMPERATURE_ENTITY]
+            if CONF_TEMPERATURE_ENTITY in entry.options
+            else entry.data.get(CONF_TEMPERATURE_ENTITY)
+        )
         self.api = TesyLocalApi(async_get_clientsession(hass), self.host)
         # optional MyTESY cloud telemetry, set up in __init__.py
         self.cloud = None
+        self.cloud_hub = None
         self.cloud_account = None
         self.cloud_error: str | None = None
         self.device_info = DeviceInfo(
@@ -44,6 +49,11 @@ class TesyCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             model=DEFAULT_MODEL,
             configuration_url=f"http://{self.host}/",
         )
+
+    def set_mac(self, mac: str | None) -> None:
+        """Link the device to its MAC (also lets HA merge it with other integrations' view)."""
+        if mac:
+            self.device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
 
     async def _async_update_data(self) -> dict[str, dict]:
         try:

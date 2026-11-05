@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.helpers.entity import Entity
 
-from .cloud import TesyCloudTelemetry
+from .cloud import TesyDeviceTelemetry
 from .coordinator import TesyCoordinator
 
 
@@ -18,7 +18,7 @@ class TesyCloudEntity(Entity):
     _key: str
 
     def __init__(self, coordinator: TesyCoordinator) -> None:
-        self.cloud: TesyCloudTelemetry = coordinator.cloud
+        self.cloud: TesyDeviceTelemetry = coordinator.cloud
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_cloud_{self._key}"
         self._attr_device_info = coordinator.device_info
 
