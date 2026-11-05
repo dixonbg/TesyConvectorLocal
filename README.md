@@ -66,8 +66,17 @@ Approach based on the investigation in [Tazmania0/TesyConvectorLocal](https://gi
 
 ### What the local API does not provide
 
-The convector does not report its room temperature, whether the element is heating right now,
-its power, firmware or Wi-Fi signal over the local API (only the Tesy cloud gets those). So:
+| Information | Local API | MyTESY cloud |
+|---|---|---|
+| All settings (mode, temperatures, switches, correction) | yes | yes |
+| Heating on/off | no | yes (within 1–3 s) |
+| Convector's own temperature | no | yes (0.5 °C steps) |
+| Model, firmware | no | yes |
+| Power | no | only the wattage chosen in the app (a fixed list); nothing is measured |
+| Room temperature (other than its own sensor) | no | no |
+| Wi-Fi signal strength | no (`getSSID` lists visible network names only) | not seen in any cloud data |
+
+So:
 
 - choose a **room temperature sensor** during setup to show the current temperature
   (it updates the climate entity whenever the sensor changes);
@@ -127,7 +136,7 @@ setup reports them as "not a supported Tesy convector".
 | `setDelayedStart` | `{"status": …, "time": minutes, "temp": …}` |
 | `setTCorrection` | `{"temp": …}` (−4…4; outside is clamped) |
 | `setAdaptiveStart`, `setOpenedWindow`, `setAntiFrost`, `setUV`, `setLockDevice` | `{"status": "on"\|"off"}` |
-| `getSSID` | settings plus `wifiinfo` (list of visible networks) |
+| `getSSID` | settings plus `wifiinfo`: comma-separated names of visible networks (no signal strength) |
 
 Temperatures are whole °C: decimals are accepted but rounded on store (23.5 → 24). Send
 `Content-Type: application/json`; a form-encoded body is read as `temp: 0`.
